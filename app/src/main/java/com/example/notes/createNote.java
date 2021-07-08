@@ -3,6 +3,7 @@ package com.example.notes;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.view.View;
@@ -68,6 +69,7 @@ public class createNote extends AppCompatActivity {
                             @Override
                             public void onSuccess(Void unused) {
                                 Toast.makeText(getApplicationContext(),"Note Added",Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(createNote.this,MainActivity.class));
                             }
                         }).addOnFailureListener(new OnFailureListener() {
                     @Override
