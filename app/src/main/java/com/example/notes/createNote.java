@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -19,7 +20,9 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class createNote extends AppCompatActivity {
 
@@ -66,19 +69,34 @@ public class createNote extends AppCompatActivity {
                 String Subtitle = inputNoteSubtitle.getText().toString();
                 String Text = inputNoteText.getText().toString();
                 Note data = new Note(Title,Subtitle,Text);
-                CollectionReference collectionReference = firebaseFirestore.collection("Notes");
-                collectionReference.add(data)
-                //firebaseFirestore.collection("Notes").set(data)
-                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                /*firebaseFirestore.collection("Notes").document("User").set(data)
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
-                            public void onSuccess(DocumentReference documentReference) {
+                            public void onSuccess(Void unused) {
                                 Toast.makeText(getApplicationContext(),"Note Added",Toast.LENGTH_SHORT).show();
-                               // startActivity(new Intent(createNote.this,MainActivity.class));
+                                startActivity(new Intent(createNote.this,MainActivity.class));
                             }
                         }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull  Exception e) {
                         Toast.makeText(getApplicationContext(),"An error Occured"+e.getMessage(),Toast.LENGTH_SHORT).show();
+                    }
+                });*/
+
+                DocumentReference documentReference = firebaseFirestore.collection("Notes").document("user");
+                Map<String,Object> user = new HashMap<>();
+                //user.put("Title",Title);
+                //user.put("Subtitle",Subtitle);
+                //user.put("Text",Text);
+                documentReference.set(data).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        Toast.makeText(createNote.this, "data inserted", Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull  Exception e) {
+                        Toast.makeText(createNote.this, "Error"+e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
             }
