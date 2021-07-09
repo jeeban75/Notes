@@ -14,6 +14,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Date;
@@ -64,12 +66,14 @@ public class createNote extends AppCompatActivity {
                 String Subtitle = inputNoteSubtitle.getText().toString();
                 String Text = inputNoteText.getText().toString();
                 Note data = new Note(Title,Subtitle,Text);
-                firebaseFirestore.collection("Notes").document("user").set(data)
-                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                CollectionReference collectionReference = firebaseFirestore.collection("Notes");
+                collectionReference.add(data)
+                //firebaseFirestore.collection("Notes").set(data)
+                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                             @Override
-                            public void onSuccess(Void unused) {
+                            public void onSuccess(DocumentReference documentReference) {
                                 Toast.makeText(getApplicationContext(),"Note Added",Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(createNote.this,MainActivity.class));
+                               // startActivity(new Intent(createNote.this,MainActivity.class));
                             }
                         }).addOnFailureListener(new OnFailureListener() {
                     @Override

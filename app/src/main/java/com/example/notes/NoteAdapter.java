@@ -58,10 +58,10 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         return notes.size();
     }
 
-    @Override
-    public int getItemViewType(int position){
-        return position;
-    }
+   // @Override
+  //  public int getItemViewType(int position){
+   //     return position;
+    //}
 
     public class NoteViewHolder extends RecyclerView.ViewHolder{
 
@@ -71,7 +71,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             super(itemView);
             textTitle = itemView.findViewById(R.id.textTitle);
             textSubtitle = itemView.findViewById(R.id.textSubtitle);
-            textDateTime = itemView.findViewById(R.id.textDateandTime);
+            //textDateTime = itemView.findViewById(R.id.textDateandTime);
         }
 
       /*  void setNote(Note note)

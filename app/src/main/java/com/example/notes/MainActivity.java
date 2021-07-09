@@ -16,6 +16,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     ImageView imageAddNoteMain;
     FirebaseFirestore firebaseFirestore;
     String Title,Subtitle,Text;
+
 
     public static final int requestAddNote = 1;
     @Override
@@ -40,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
         notes = new ArrayList<>();
 
         NoteAdapter noteAdapter = new NoteAdapter(this, notes);
-        //notesRecyclerView.setHasFixedSize(true);
+        notesRecyclerView.setHasFixedSize(true);
 
 
         StaggeredGridLayoutManager staggeredGridLayoutManager  = new StaggeredGridLayoutManager(
@@ -48,8 +51,32 @@ public class MainActivity extends AppCompatActivity {
         notesRecyclerView.setLayoutManager(staggeredGridLayoutManager);
         notesRecyclerView.setAdapter(noteAdapter);
 
-        fetchFirebase();
-        notes.add(new Note(Title,Subtitle,Text));
+       firebaseFirestore.collection("Notes").get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>(){
+                                          @Override
+                                          public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                              if (!queryDocumentSnapshots.isEmpty()) {
+                                                  List<DocumentSnapshot> list = queryDocumentSnapshots.getDocuments();
+                                                  for (DocumentSnapshot documentSnapshot : list) {
+                                                      Note note = documentSnapshot.toObject(Note.class);
+                                                      notes.add(note);
+                                                  }
+                                                  noteAdapter.notifyDataSetChanged();
+                                              } else {
+                                                  Toast.makeText(MainActivity.this, "empty", Toast.LENGTH_SHORT).show();
+                                              }
+                                          }
+                                      }).addOnFailureListener(new OnFailureListener() {
+           @Override
+           public void onFailure( Exception e) {
+               Toast.makeText(MainActivity.this, "Failed"+e.getMessage(), Toast.LENGTH_SHORT).show();
+           }
+       });
+
+
+
+
+
 
         imageAddNoteMain.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,25 +89,10 @@ public class MainActivity extends AppCompatActivity {
        //end of imagenoteitem
     }
 
-    private void fetchFirebase(){
 
-        firebaseFirestore.collection("Notes").document("user").get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        Note data =documentSnapshot.toObject(Note.class);
-                        Title = data.getTitle();
-                        Subtitle = data.getSubtitle();
-                        Text = data.getext();
-                        Toast.makeText(getApplicationContext(),Title+Subtitle+Text,Toast.LENGTH_SHORT).show();
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull  Exception e) {
-                Toast.makeText(getApplicationContext(),"fetching failed"+e.getMessage(),Toast.LENGTH_SHORT).show();
+    //private void fetchFirebase(){
 
-            }
-        });
 
-    }
+
+    //}
 }
