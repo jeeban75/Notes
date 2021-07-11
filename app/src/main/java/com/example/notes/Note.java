@@ -8,16 +8,25 @@ public class Note {
     }
     private String Subtitle;
 
-    public Note(String Subtitle, String Text, String Title) {
+    public String getDateTime() {
+        return DateTime;
+    }
+
+    public void setDateTime(String dateTime) {
+        DateTime = dateTime;
+    }
+
+    private String DateTime;
+    public Note(String Title, String Subtitle, String DateTime) {
         this.Subtitle = Subtitle;
-        this.Text = Text;
+        this.DateTime = DateTime;
         this.Title = Title;
     }
 
     private String Text;
     private String Title;
 
-    public String getTitle() {
+    public  String getTitle() {
         return Title;
     }
 
@@ -25,7 +34,7 @@ public class Note {
         Title = title;
     }
 
-    public String getSubtitle() {
+    public  String getSubtitle() {
         return Subtitle;
     }
 
@@ -33,11 +42,11 @@ public class Note {
         Subtitle = subtitle;
     }
 
-    public String getext() {
+    public  String gettext() {
         return Text;
     }
 
-    public void setext(String text) {
+    public void settext(String text) {
         Text = text;
     }
 

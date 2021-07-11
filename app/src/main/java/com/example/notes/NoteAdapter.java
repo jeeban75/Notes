@@ -1,66 +1,45 @@
 package com.example.notes;
 
-import android.content.Context;
-import android.provider.ContactsContract;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
-import org.w3c.dom.Text;
+public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.NoteHolder>   {
 
-import java.util.ArrayList;
 
-public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder>{
-
-    Context context;
-    ArrayList<Note> noteArrayList;
-    public NoteAdapter(Context context, ArrayList<Note> noteArrayList) {
-        this.context = context;
-        this.noteArrayList = noteArrayList;
+    public NoteAdapter(@NonNull  FirestoreRecyclerOptions<Note> options) {
+        super(options);
     }
 
-
+    @Override
+    protected void onBindViewHolder(@NonNull  NoteAdapter.NoteHolder holder, int position, @NonNull  Note note) {
+        holder.Title.setText(note.getTitle());
+        holder.Subtitle.setText(note.getSubtitle());
+        holder.DateTime.setText(note.getDateTime());
+    }
 
     @NonNull
     @Override
-    public NoteAdapter.NoteViewHolder onCreateViewHolder(@NonNull  ViewGroup parent, int viewType) {
-
-        View v = LayoutInflater.from(context).inflate(R.layout.container_note,parent,false);
-        return new NoteViewHolder(v);
+    public NoteHolder onCreateViewHolder(@NonNull  ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.container_note, parent, false);
+        return new NoteHolder(v);
     }
 
-    @Override
-    public void onBindViewHolder(@NonNull  NoteViewHolder holder, int position) {
-        Note note = noteArrayList.get(position);
-        holder.Title.setText(note.getTitle());
-        holder.Subtitle.setText(note.getSubtitle());
-        holder.Text.setText(note.getext());
-        Toast.makeText(context, note.getTitle(), Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public int getItemCount() {
-        return noteArrayList.size();
-    }
-
-    public class NoteViewHolder extends  RecyclerView.ViewHolder {
-
-        TextView Title,Subtitle,Text;
-        public NoteViewHolder(@NonNull  View itemView) {
+    public class NoteHolder extends RecyclerView.ViewHolder{
+        TextView Title,Subtitle,DateTime;
+        public NoteHolder(@NonNull  View itemView) {
             super(itemView);
             Title = itemView.findViewById(R.id.textTitle);
             Subtitle = itemView.findViewById(R.id.textSubtitle);
-            Text = itemView.findViewById(R.id.textDateandTime);
+            DateTime = itemView.findViewById(R.id.textDateandTime);
         }
     }
+
 }
-
-
