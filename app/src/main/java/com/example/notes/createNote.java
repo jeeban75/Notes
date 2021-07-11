@@ -59,6 +59,8 @@ public class createNote extends AppCompatActivity {
     StorageReference storageReference;
     private AlertDialog dialogAddURL;
 
+    private Note AvailableNote;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,6 +97,12 @@ public class createNote extends AppCompatActivity {
         Miscellaneous();
         SubtitleIndiciatorColor();
 
+        if (getIntent().getBooleanExtra("isViewOrUpdate",false))
+        {
+            AvailableNote = (Note) getIntent().getSerializableExtra("documentSnapshot");
+            VieworUpdate();
+        }
+
         imageSave = findViewById(R.id.imageSave);
 
         imageSave.setOnClickListener(new View.OnClickListener() {
@@ -124,6 +132,21 @@ public class createNote extends AppCompatActivity {
                 removeImage.setVisibility(View.GONE);
             }
         });
+    }
+
+    private void VieworUpdate() {
+        inputNoteTitle.setText(AvailableNote.getTitle());
+        inputNoteSubtitle.setText(AvailableNote.getSubtitle());
+        inputNoteText.setText(AvailableNote.gettext());
+        textDateTime.setText(
+                new SimpleDateFormat("EEEE,dd MMMM yyyy HH:mm a", Locale.getDefault())
+                        .format(new Date())
+        );
+        //image left
+      /*  if(AvailableNote.getWeb_Link() != null && !AvailableNote.getWeb_Link().trim().isEmpty()){
+            textWebURl.setText(AvailableNote.getWeb_Link());
+            layoutWebURl.setVisibility(View.VISIBLE);
+        }*/
     }
 
 

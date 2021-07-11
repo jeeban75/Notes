@@ -8,6 +8,16 @@ public class Note {
     }
     private String Subtitle;
 
+    public String getWeb_Link() {
+        return Web_Link;
+    }
+
+    public void setWeb_Link(String web_Link) {
+        Web_Link = web_Link;
+    }
+
+    private String Web_Link;
+
     public String getDateTime() {
         return DateTime;
     }

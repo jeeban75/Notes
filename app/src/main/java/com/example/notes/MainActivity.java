@@ -25,10 +25,12 @@ import android.widget.Toast;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import com.google.firebase.firestore.Query;
 
+import java.io.Serializable;
 
 
 public class MainActivity extends AppCompatActivity  {
@@ -40,6 +42,8 @@ public class MainActivity extends AppCompatActivity  {
 
     private NoteAdapter noteAdapter;
     public static final int requestAddNote = 1;
+    public static final int requestUpdateNote = 2;
+    private int noteClickedPosition= -1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +64,23 @@ public class MainActivity extends AppCompatActivity  {
         });
         showRecycleView();
         //end of imagenoteitem
+
+        noteAdapter.setOnItemClickListener(new NoteAdapter.onItemClickListener() {
+            @Override
+            public void onItemClick(DocumentSnapshot documentSnapshot, int position) {
+                Note note = documentSnapshot.toObject(Note.class);
+                String Title = note.getTitle();
+                String Subtitle = note.getSubtitle();
+                String DateTime = note.getDateTime();
+                String Text = note.gettext();
+                Toast.makeText(MainActivity.this, "position"+position+Title+Subtitle+DateTime+Text, Toast.LENGTH_SHORT).show();
+                noteClickedPosition=position;
+                Intent intent = new Intent(getApplicationContext(),createNote.class);
+                intent.putExtra("isViewOrUpdate",false);
+                intent.putExtra("documentSnapshot", (Serializable) documentSnapshot);
+                startActivityForResult(intent,requestUpdateNote);
+            }
+        });
     }
     private void showRecycleView()
     {
