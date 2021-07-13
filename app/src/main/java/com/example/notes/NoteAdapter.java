@@ -1,5 +1,6 @@
 package com.example.notes;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +18,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.NoteHolder>   {
 
     private onItemClickListener listener;
-
+    // private onLongClickListener longClickListener;
     public NoteAdapter(@NonNull  FirestoreRecyclerOptions<Note> options) {
         super(options);
     }
@@ -56,6 +57,12 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.Note
 
                 }
             });
+         /*   itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    return true;
+                }
+            });*/
         }
     }
 
@@ -65,5 +72,13 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.Note
     public void setOnItemClickListener(onItemClickListener listener){
         this.listener=listener;
     }
+
+   /* public interface onLongClickListener{
+        void onLongClickListener(int position);
+    }
+
+    public void setOnLongCliclListener(onLongClickListener longClicklistener){
+        this.longClickListener = longClickListener;
+    }*/
 
 }

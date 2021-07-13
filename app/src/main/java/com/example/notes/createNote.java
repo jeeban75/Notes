@@ -32,6 +32,8 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
@@ -55,6 +57,8 @@ public class createNote extends AppCompatActivity {
     private static final int REQUEST_CODE_STORAGE_PERMISSION = 1;
     private static final int REQUEST_CODE_SELECT_IMAGE = 2;
     FirebaseFirestore firebaseFirestore;
+    FirebaseUser firebaseUser;
+    FirebaseAuth firebaseAuth;
     FirebaseStorage firebaseStorage;
     StorageReference storageReference;
     private AlertDialog dialogAddURL;
@@ -74,6 +78,8 @@ public class createNote extends AppCompatActivity {
         firebaseFirestore = FirebaseFirestore.getInstance();
         firebaseStorage = FirebaseStorage.getInstance();
         storageReference = firebaseStorage.getReference();
+        firebaseAuth = FirebaseAuth.getInstance();
+        firebaseUser = firebaseAuth.getCurrentUser();
 
         textWebURl = findViewById(R.id.textWebUrl);
         layoutWebURl = findViewById(R.id.layoutWebUrl);
@@ -135,7 +141,9 @@ public class createNote extends AppCompatActivity {
     }
 
     private void VieworUpdate() {
-        inputNoteTitle.setText(AvailableNote.getTitle());
+       // Toast.makeText(this, getIntent().getStringExtra("Title"), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "pass", Toast.LENGTH_SHORT).show();
+        inputNoteTitle.setText( AvailableNote.getTitle());
         inputNoteSubtitle.setText(AvailableNote.getSubtitle());
         inputNoteText.setText(AvailableNote.gettext());
         textDateTime.setText(
@@ -143,10 +151,10 @@ public class createNote extends AppCompatActivity {
                         .format(new Date())
         );
         //image left
-      /*  if(AvailableNote.getWeb_Link() != null && !AvailableNote.getWeb_Link().trim().isEmpty()){
+        if(AvailableNote.getWeb_Link() != null && !AvailableNote.getWeb_Link().trim().isEmpty()){
             textWebURl.setText(AvailableNote.getWeb_Link());
             layoutWebURl.setVisibility(View.VISIBLE);
-        }*/
+        }
     }
 
 
@@ -164,7 +172,7 @@ public class createNote extends AppCompatActivity {
             String Subtitle = inputNoteSubtitle.getText().toString();
             String Text = inputNoteText.getText().toString();
             String DateTime = textDateTime.getText().toString();
-            DocumentReference documentReference = firebaseFirestore.collection("Notes").document("Test").collection("Data").document();
+            DocumentReference documentReference = firebaseFirestore.collection("Notes").document(firebaseUser.getUid()).collection("Data").document();
             Map<String, Object> note = new HashMap<>();
             note.put("Title", Title);
             note.put("Subtitle", Subtitle);
