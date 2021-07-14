@@ -12,10 +12,10 @@
         android:id="@+id/logo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Login"
         android:textColor="@color/white"
         android:textSize="36sp"
         android:textStyle="bold"
+        android:fontFamily="@font/ubuntu_bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -33,6 +33,7 @@
         android:ems="10"
         android:hint="Password"
         android:inputType="textPassword"
+        android:fontFamily="@font/ubuntu_regular"
         android:paddingLeft="20dp"
         android:paddingTop="10dp"
         android:paddingRight="10dp"
@@ -56,7 +57,8 @@
         android:drawablePadding="10dp"
         android:ems="10"
         android:hint="Email"
-        android:inputType="textPersonName"
+        android:inputType="textEmailAddress"
+        android:fontFamily="@font/ubuntu_regular"
         android:paddingLeft="20dp"
         android:paddingTop="10dp"
         android:paddingRight="10dp"
@@ -74,6 +76,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="Forgot Password?"
+        android:fontFamily="@font/ubuntu_bold"
         android:textColor="@color/white"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -87,6 +90,7 @@
         android:layout_marginTop="24dp"
         android:background="@drawable/btn_bg"
         android:text="Login"
+        android:fontFamily="@font/ubuntu_medium"
         app:layout_constraintEnd_toEndOf="@+id/loginPassword"
         app:layout_constraintStart_toStartOf="@+id/loginPassword"
         app:layout_constraintTop_toBottomOf="@+id/forgotPassword" />
@@ -107,7 +111,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Dont have an Account?"
+            android:text="Don't have an Account?"
             android:textColor="@color/white" />
 
         <TextView
@@ -115,6 +119,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="SignUp"
+            android:fontFamily="@font/ubuntu_bold"
             android:textColor="@color/colorDelete" />
 
     </LinearLayout>

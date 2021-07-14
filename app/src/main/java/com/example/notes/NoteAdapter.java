@@ -18,16 +18,38 @@ import com.google.firebase.firestore.DocumentSnapshot;
 public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.NoteHolder>   {
 
     private onItemClickListener listener;
-    // private onLongClickListener longClickListener;
+     private onLongClickListener longClickListener;
     public NoteAdapter(@NonNull  FirestoreRecyclerOptions<Note> options) {
         super(options);
     }
 
     @Override
     protected void onBindViewHolder(@NonNull  NoteAdapter.NoteHolder holder, int position, @NonNull  Note note) {
+
         holder.Title.setText(note.getTitle());
         holder.Subtitle.setText(note.getSubtitle());
         holder.DateTime.setText(note.getDateTime());
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //int position = holder.getPosition();
+                if(position!= RecyclerView.NO_POSITION && listener!=null)
+                {
+                    listener.onItemClick(getSnapshots().getSnapshot(position),position);
+                }
+            }
+        });
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if(position!= RecyclerView.NO_POSITION && longClickListener!=null) {
+                    longClickListener.onLongClickListener(getSnapshots().getSnapshot(position),position);
+
+                }
+                return true;
+            }
+        });
     }
 
     @NonNull
@@ -45,7 +67,7 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.Note
             Subtitle = itemView.findViewById(R.id.textSubtitle);
             DateTime = itemView.findViewById(R.id.textDateandTime);
 
-            itemView.setOnClickListener(new View.OnClickListener() {
+          /*  itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
@@ -56,7 +78,7 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.Note
                  }
 
                 }
-            });
+            });*/
          /*   itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
@@ -73,12 +95,12 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.Note
         this.listener=listener;
     }
 
-   /* public interface onLongClickListener{
-        void onLongClickListener(int position);
+    public interface onLongClickListener{
+        void onLongClickListener(DocumentSnapshot documentSnapshot,int position);
     }
 
     public void setOnLongCliclListener(onLongClickListener longClicklistener){
         this.longClickListener = longClickListener;
-    }*/
+    }
 
 }

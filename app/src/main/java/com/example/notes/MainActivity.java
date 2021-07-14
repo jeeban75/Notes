@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity  {
                 NoteDeleteDialog();
             }
         });*/
-        noteAdapter.setOnItemClickListener(new NoteAdapter.onItemClickListener() {
+     /*   noteAdapter.setOnItemClickListener(new NoteAdapter.onItemClickListener() {
             @Override
             public void onItemClick(DocumentSnapshot documentSnapshot, int position) {
                 Note note = documentSnapshot.toObject(Note.class);
@@ -104,23 +104,24 @@ public class MainActivity extends AppCompatActivity  {
                // String Subtitle = note.getSubtitle();
                 //String DateTime = note.getDateTime();
                 //String Text = note.gettext();
-                //Toast.makeText(MainActivity.this, "position"+position+Title+Subtitle+DateTime+Text, Toast.LENGTH_SHORT).show();
+
                 noteClickedPosition=position;
                 Intent intent = new Intent(MainActivity.this,createNote.class);
-                intent.putExtra("isViewOrUpdate",false);
+                 intent.putExtra("isViewOrUpdate",true);
                 intent.putExtra("documentSnapshot", (Serializable) note);
                 startActivityForResult(intent,requestUpdateNote);
-             /*   intent.putExtra("Title",note.getTitle());
-                intent.putExtra("Subtitle",note.getSubtitle());
-                intent.putExtra("Text",note.gettext());
-                intent.putExtra("Title",note.getTitle());
-                if(note.getWeb_Link() != null && !note.getWeb_Link().trim().isEmpty()){
-                    intent.putExtra("Web_Link",note.getWeb_Link());
-                }
-                intent.putExtra("Position",noteClickedPosition);
-                MainActivity.this.startActivity(intent);*/
 
             }
+        });*/
+        noteAdapter.setOnLongCliclListener(new NoteAdapter.onLongClickListener() {
+            @Override
+            public void onLongClickListener(DocumentSnapshot documentSnapshot, int position) {
+                Toast.makeText(MainActivity.this, "working", Toast.LENGTH_SHORT).show();
+            }
+
+
+
+            
         });
     }
 

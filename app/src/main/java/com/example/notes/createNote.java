@@ -102,12 +102,12 @@ public class createNote extends AppCompatActivity {
         ImagePath = "";
         Miscellaneous();
         SubtitleIndiciatorColor();
-
-        if (getIntent().getBooleanExtra("isViewOrUpdate",false))
+      /*  Boolean bool = getIntent().getExtras().getBoolean("isViewOrUpdate");
+        if (bool)
         {
             AvailableNote = (Note) getIntent().getSerializableExtra("documentSnapshot");
             VieworUpdate();
-        }
+        }*/
 
         imageSave = findViewById(R.id.imageSave);
 
@@ -140,9 +140,7 @@ public class createNote extends AppCompatActivity {
         });
     }
 
-    private void VieworUpdate() {
-       // Toast.makeText(this, getIntent().getStringExtra("Title"), Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, "pass", Toast.LENGTH_SHORT).show();
+  /*  private void VieworUpdate() {
         inputNoteTitle.setText( AvailableNote.getTitle());
         inputNoteSubtitle.setText(AvailableNote.getSubtitle());
         inputNoteText.setText(AvailableNote.gettext());
@@ -155,7 +153,7 @@ public class createNote extends AppCompatActivity {
             textWebURl.setText(AvailableNote.getWeb_Link());
             layoutWebURl.setVisibility(View.VISIBLE);
         }
-    }
+    }*/
 
 
     //Validation
@@ -181,6 +179,17 @@ public class createNote extends AppCompatActivity {
             if(layoutWebURl.getVisibility() == View.VISIBLE){
                 note.put("Web Link",textWebURl.getText().toString());
             }
+         /*   if(AvailableNote!=null ){
+                documentReference = firebaseFirestore.collection("Notes")
+                        .document(firebaseUser.getUid()).collection("Data").document(documentReference.getId());
+                note.put("Title", Title);
+                note.put("Subtitle", Subtitle);
+                note.put("Text", Text);
+                note.put("DateTime", DateTime);
+                if(layoutWebURl.getVisibility() == View.VISIBLE){
+                    note.put("Web Link",textWebURl.getText().toString());
+                }
+            }*/
             documentReference.set(note).addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void unused) {
