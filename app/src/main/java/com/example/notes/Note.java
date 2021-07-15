@@ -10,15 +10,15 @@ public class Note implements Serializable {
     }
     private String Subtitle;
 
-    public String getWeb_Link() {
-        return Web_Link;
+    public String getWebLink() {
+        return WebLink;
     }
 
-    public void setWeb_Link(String web_Link) {
-        Web_Link = web_Link;
+    public void setWebLink(String webLink) {
+        WebLink = webLink;
     }
 
-    private String Web_Link;
+    private String WebLink;
 
     public String getDateTime() {
         return DateTime;

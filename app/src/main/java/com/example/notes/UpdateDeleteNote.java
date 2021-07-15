@@ -1,12 +1,5 @@
 package com.example.notes;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -29,13 +22,19 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -46,7 +45,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class createNote extends AppCompatActivity {
+public class UpdateDeleteNote extends AppCompatActivity {
 
     ImageView imageBack, imageSave, imageNote,removeURl,removeImage;
     EditText inputNoteTitle, inputNoteSubtitle, inputNoteText;
@@ -54,6 +53,7 @@ public class createNote extends AppCompatActivity {
     private LinearLayout layoutWebURl;
     private String ImagePath;
     private String SelectedNoteColor;
+    private String docId;
     private View SubtitleIndicator;
     private static final int REQUEST_CODE_STORAGE_PERMISSION = 1;
     private static final int REQUEST_CODE_SELECT_IMAGE = 2;
@@ -63,6 +63,8 @@ public class createNote extends AppCompatActivity {
     FirebaseStorage firebaseStorage;
     StorageReference storageReference;
     private AlertDialog dialogAddURL;
+    Intent Data;
+    Note AvailableNote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +92,7 @@ public class createNote extends AppCompatActivity {
 
         imageNote = findViewById(R.id.imageNote);
         imageBack = findViewById(R.id.imageBack);
-            imageBack.setOnClickListener(new View.OnClickListener() {
+        imageBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onBackPressed();
@@ -102,16 +104,17 @@ public class createNote extends AppCompatActivity {
         Miscellaneous();
         SubtitleIndiciatorColor();
 
-
+        Data = getIntent();
+        if (Data.getBooleanExtra("isViewOrUpdate",true)){
+            check();}
 
         imageSave = findViewById(R.id.imageSave);
 
-       imageSave.setOnClickListener(new View.OnClickListener() {
+        imageSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                    saveNote();
-
+                 VieworUpdate();
 
             }
         });
@@ -137,51 +140,74 @@ public class createNote extends AppCompatActivity {
 
     }
 
+    private void check() {
 
-    //Validation
-    private void saveNote() {
-        String getTitle = inputNoteTitle.getText().toString();
-        String getSubtitle = inputNoteSubtitle.getText().toString().trim();
-        String getText = inputNoteText.getText().toString().trim();
-        if (getTitle.isEmpty()) {
-            Toast.makeText(this, "Note Title Can't Be Empty", Toast.LENGTH_SHORT).show();
-
-        } else if (getSubtitle.isEmpty() || getText.isEmpty()) {
-            Toast.makeText(this, "Note Can't Be Empty", Toast.LENGTH_SHORT).show();
-
+        Intent intent = new Intent(getApplicationContext(), createNote.class);
+        AvailableNote = (Note) getIntent().getSerializableExtra("documentSnapshot");
+        intent.putExtra("DocId", getIntent().getStringExtra("DocId"));
+        docId = Data.getStringExtra("DocId");
+        Toast.makeText(this, "text" + AvailableNote.getTitle(), Toast.LENGTH_SHORT).show();
+        inputNoteTitle.setText(AvailableNote.getTitle());
+        inputNoteSubtitle.setText(AvailableNote.getSubtitle());
+        inputNoteText.setText(AvailableNote.gettext());
+        textDateTime.setText(
+                new SimpleDateFormat("EEEE,dd MMMM yyyy HH:mm a", Locale.getDefault())
+                        .format(new Date())
+        );
+        //image left
+        if (AvailableNote.getWebLink()!= null && !AvailableNote.getWebLink().trim().isEmpty()) {
+            textWebURl.setText(AvailableNote.getWebLink());
+            layoutWebURl.setVisibility(View.VISIBLE);
         }
-        else{
-        String Title = inputNoteTitle.getText().toString();
-        String Subtitle = inputNoteSubtitle.getText().toString();
-        String Text = inputNoteText.getText().toString();
-        String DateTime = textDateTime.getText().toString();
 
-            DocumentReference documentReference = firebaseFirestore.collection("Notes").document(firebaseUser.getUid()).collection("Data").document();
-            Map<String, Object> note = new HashMap<>();
-            note.put("Title", Title);
-            note.put("Subtitle", Subtitle);
-            note.put("Text", Text);
-            note.put("DateTime", DateTime);
-            if (layoutWebURl.getVisibility() == View.VISIBLE) {
-                note.put("WebLink", textWebURl.getText().toString());
-            }
-
-            documentReference.set(note).addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void unused) {
-
-                    Toast.makeText(createNote.this, "Data Inserted", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(createNote.this, MainActivity.class));
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(createNote.this, "Failed" + e.getMessage(), Toast.LENGTH_SHORT).show();
-
-                }
-            });
-        }
     }
+        private void VieworUpdate() {
+            String getTitle = inputNoteTitle.getText().toString();
+            String getSubtitle = inputNoteSubtitle.getText().toString().trim();
+            String getText = inputNoteText.getText().toString().trim();
+                if (inputNoteTitle.getText().toString().isEmpty()) {
+                    Toast.makeText(this, "Note Title Can't Be Empty", Toast.LENGTH_SHORT).show();
+
+                } else if (inputNoteSubtitle.getText().toString().trim().isEmpty()
+                        || inputNoteText.getText().toString().trim().isEmpty()) {
+                    Toast.makeText(this, "Note Can't Be Empty", Toast.LENGTH_SHORT).show();
+
+                }
+                else {
+                    String Title = inputNoteTitle.getText().toString();
+                    String Subtitle = inputNoteSubtitle.getText().toString();
+                    String Text = inputNoteText.getText().toString();
+                    if (getTitle != Title || getSubtitle != Subtitle || getText != Text) {
+
+                        String DateTime = textDateTime.getText().toString();
+                        DocumentReference documentReference = firebaseFirestore.collection("Notes").document(firebaseUser.getUid()).collection("Data").document(docId);
+                        Map<String, Object> note = new HashMap<>();
+                        note.put("Title", Title);
+                        note.put("Subtitle", Subtitle);
+                        note.put("Text", Text);
+                        note.put("DateTime", DateTime);
+                        if (layoutWebURl.getVisibility() == View.VISIBLE) {
+                            note.put("WebLink", textWebURl.getText().toString());
+                        }
+
+                        documentReference.set(note).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void unused) {
+
+                                Toast.makeText(UpdateDeleteNote.this, "Data Inserted", Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(UpdateDeleteNote.this, MainActivity.class));
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(UpdateDeleteNote.this, "Failed" + e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                            }
+                        });
+                    }
+                }
+        }
+
 
     private void Miscellaneous() {
         final LinearLayout linearLayout = findViewById(R.id.layoutMiscellaneous);
@@ -274,7 +300,7 @@ public class createNote extends AppCompatActivity {
                 if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(
-                            createNote.this,
+                            UpdateDeleteNote.this,
                             new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                             REQUEST_CODE_STORAGE_PERMISSION
                     );
@@ -342,7 +368,7 @@ public class createNote extends AppCompatActivity {
 
     private  void  URlDialog(){
         if(dialogAddURL == null){
-            AlertDialog.Builder builder = new AlertDialog.Builder(createNote.this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(UpdateDeleteNote.this);
             View view = LayoutInflater.from(this).inflate(
                     R.layout.layout_addurl,(ViewGroup)findViewById(R.id.layoutAddUrlContainer)
             );
@@ -358,16 +384,16 @@ public class createNote extends AppCompatActivity {
 
             view.findViewById(R.id.textAdd).setOnClickListener(new View.OnClickListener() {
                 @Override
-                 public void onClick(View v) {
-                        if(inputUrl.getText().toString().trim().isEmpty()){
-                            Toast.makeText(createNote.this, "Enter URL", Toast.LENGTH_SHORT).show();
-                        }else if(!Patterns.WEB_URL.matcher(inputUrl.getText().toString()).matches()){
-                            Toast.makeText(createNote.this, "Enter Valid URl", Toast.LENGTH_SHORT).show();
-                        }else{
-                            textWebURl.setText(inputUrl.getText().toString());
-                            layoutWebURl.setVisibility(View.VISIBLE);
-                            dialogAddURL.dismiss();
-                        }
+                public void onClick(View v) {
+                    if(inputUrl.getText().toString().trim().isEmpty()){
+                        Toast.makeText(UpdateDeleteNote.this, "Enter URL", Toast.LENGTH_SHORT).show();
+                    }else if(!Patterns.WEB_URL.matcher(inputUrl.getText().toString()).matches()){
+                        Toast.makeText(UpdateDeleteNote.this, "Enter Valid URl", Toast.LENGTH_SHORT).show();
+                    }else{
+                        textWebURl.setText(inputUrl.getText().toString());
+                        layoutWebURl.setVisibility(View.VISIBLE);
+                        dialogAddURL.dismiss();
+                    }
                 }
             });
 
@@ -381,5 +407,6 @@ public class createNote extends AppCompatActivity {
         }
         dialogAddURL.show();
     }
-
 }
+
+
