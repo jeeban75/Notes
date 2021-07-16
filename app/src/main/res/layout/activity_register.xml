@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg"
+    android:background="@drawable/background"
     tools:context=".RegisterActivity">
 
     <TextView
@@ -18,7 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.13" />
+        app:layout_constraintVertical_bias="0.18" />
 
     <EditText
         android:id="@+id/inputUsername"
@@ -48,7 +48,7 @@
         android:id="@+id/inputEmail"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:background="@drawable/input_bg"
         android:drawableLeft="@drawable/ic_email"
         android:drawablePadding="10dp"
@@ -70,7 +70,7 @@
         android:id="@+id/inputPassword"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:background="@drawable/input_bg"
         android:drawableLeft="@drawable/ic_security"
         android:drawablePadding="10dp"
@@ -92,7 +92,7 @@
         android:id="@+id/inputConfirmPassword"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:background="@drawable/input_bg"
         android:drawableLeft="@drawable/ic_security"
         android:drawablePadding="10dp"
@@ -129,8 +129,9 @@
         android:layout_marginTop="16dp"
         android:shadowColor="@color/white"
         android:text="Already Have an Account?"
+        android:textSize="15dp"
         android:fontFamily="@font/ubuntu_bold"
-        android:textColor="@color/white"
+        android:textColor="@color/colorNoteColor2"
         app:layout_constraintEnd_toEndOf="@+id/btnRegister"
         app:layout_constraintStart_toStartOf="@+id/btnRegister"
         app:layout_constraintTop_toBottomOf="@+id/btnRegister" />

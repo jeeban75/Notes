@@ -65,6 +65,7 @@ public class UpdateDeleteNote extends AppCompatActivity {
     private AlertDialog dialogAddURL;
     Intent Data;
     Note AvailableNote;
+   LinearLayout linearLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +83,7 @@ public class UpdateDeleteNote extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
 
+        linearLayout = findViewById(R.id.layoutMiscellaneous);
         textWebURl = findViewById(R.id.textWebUrl);
         layoutWebURl = findViewById(R.id.layoutWebUrl);
         textDateTime = (TextView) findViewById(R.id.textDateTime);
@@ -106,6 +108,8 @@ public class UpdateDeleteNote extends AppCompatActivity {
 
         Data = getIntent();
         if (Data.getBooleanExtra("isViewOrUpdate",true)){
+
+
             check();}
 
         imageSave = findViewById(R.id.imageSave);
@@ -146,7 +150,7 @@ public class UpdateDeleteNote extends AppCompatActivity {
         AvailableNote = (Note) getIntent().getSerializableExtra("documentSnapshot");
         intent.putExtra("DocId", getIntent().getStringExtra("DocId"));
         docId = Data.getStringExtra("DocId");
-        Toast.makeText(this, "text" + AvailableNote.getTitle(), Toast.LENGTH_SHORT).show();
+
         inputNoteTitle.setText(AvailableNote.getTitle());
         inputNoteSubtitle.setText(AvailableNote.getSubtitle());
         inputNoteText.setText(AvailableNote.gettext());
@@ -159,12 +163,34 @@ public class UpdateDeleteNote extends AppCompatActivity {
             textWebURl.setText(AvailableNote.getWebLink());
             layoutWebURl.setVisibility(View.VISIBLE);
         }
+        GradientDrawable gradientDrawable = (GradientDrawable) SubtitleIndicator.getBackground();
+        gradientDrawable.setColor(Color.parseColor(AvailableNote.getSelectedNoteColor()));
+
+        if(AvailableNote!=null && AvailableNote.getSelectedNoteColor() !=null &&
+                !AvailableNote.getSelectedNoteColor().trim().isEmpty())
+        {
+            switch (AvailableNote.getSelectedNoteColor()){
+                case "#FDBE3B" :
+                    linearLayout.findViewById(R.id.viewColor2).performClick();
+                    break;
+                case "#FF4842" :
+                    linearLayout.findViewById(R.id.viewColor3).performClick();
+                    break;
+                case "#3A52Fc" :
+                    linearLayout.findViewById(R.id.viewColor4).performClick();
+                    break;
+                case "#000000" :
+                    linearLayout.findViewById(R.id.viewColor5).performClick();
+                    break;
+            }
+        }
 
     }
         private void VieworUpdate() {
             String getTitle = inputNoteTitle.getText().toString();
             String getSubtitle = inputNoteSubtitle.getText().toString().trim();
             String getText = inputNoteText.getText().toString().trim();
+
                 if (inputNoteTitle.getText().toString().isEmpty()) {
                     Toast.makeText(this, "Note Title Can't Be Empty", Toast.LENGTH_SHORT).show();
 
@@ -186,6 +212,7 @@ public class UpdateDeleteNote extends AppCompatActivity {
                         note.put("Subtitle", Subtitle);
                         note.put("Text", Text);
                         note.put("DateTime", DateTime);
+                        note.put("SelectedNoteColor",SelectedNoteColor);
                         if (layoutWebURl.getVisibility() == View.VISIBLE) {
                             note.put("WebLink", textWebURl.getText().toString());
                         }
@@ -210,7 +237,7 @@ public class UpdateDeleteNote extends AppCompatActivity {
 
 
     private void Miscellaneous() {
-        final LinearLayout linearLayout = findViewById(R.id.layoutMiscellaneous);
+
         final BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(linearLayout);
         linearLayout.findViewById(R.id.textMiscellaneous).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -293,6 +320,9 @@ public class UpdateDeleteNote extends AppCompatActivity {
                 SubtitleIndiciatorColor();
             }
         });
+
+
+
         linearLayout.findViewById(R.id.layoutAddImage).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

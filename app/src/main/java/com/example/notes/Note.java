@@ -8,7 +8,27 @@ public class Note implements Serializable {
     public Note(){
 
     }
+
+    public String getSelectedNoteColor() {
+        return SelectedNoteColor;
+    }
+
+    public void setSelectedNoteColor(String selectedNoteColor) {
+        SelectedNoteColor = selectedNoteColor;
+    }
+
+    private String SelectedNoteColor;
     private String Subtitle;
+
+    public String getImagePath() {
+        return ImagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        ImagePath = imagePath;
+    }
+
+    private String ImagePath;
 
     public String getWebLink() {
         return WebLink;

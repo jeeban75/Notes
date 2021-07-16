@@ -8,6 +8,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -26,6 +27,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,13 +40,16 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 public class createNote extends AppCompatActivity {
 
@@ -63,6 +68,8 @@ public class createNote extends AppCompatActivity {
     FirebaseStorage firebaseStorage;
     StorageReference storageReference;
     private AlertDialog dialogAddURL;
+    String randomKey ;
+    Uri selectedImageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +83,7 @@ public class createNote extends AppCompatActivity {
 
         firebaseFirestore = FirebaseFirestore.getInstance();
         firebaseStorage = FirebaseStorage.getInstance();
-        storageReference = firebaseStorage.getReference();
+      //  storageReference = firebaseStorage.getReference();
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
 
@@ -162,6 +169,10 @@ public class createNote extends AppCompatActivity {
             note.put("Subtitle", Subtitle);
             note.put("Text", Text);
             note.put("DateTime", DateTime);
+            note.put("SelectedNoteColor",SelectedNoteColor);
+            //storeImage();
+
+           note.put("ImagePath",ImagePath);
             if (layoutWebURl.getVisibility() == View.VISIBLE) {
                 note.put("WebLink", textWebURl.getText().toString());
             }
@@ -322,7 +333,7 @@ public class createNote extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_SELECT_IMAGE && resultCode == RESULT_OK) {
             if (data != null) {
-                Uri selectedImageUri = data.getData();
+                selectedImageUri = data.getData();
                 if (selectedImageUri != null) {
                     try {
                         InputStream inputStream = getContentResolver().openInputStream(selectedImageUri);
@@ -330,6 +341,8 @@ public class createNote extends AppCompatActivity {
                         imageNote.setImageBitmap(bitmap);
                         imageNote.setVisibility(View.VISIBLE);
                         removeImage.setVisibility(View.VISIBLE);
+                        storeImage();
+                       // ImagePath = selectedImageUri.getPath();
 
                     } catch (Exception e) {
                         Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -337,6 +350,56 @@ public class createNote extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private void storeImage() {
+
+        final ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Uploading Image...");
+        progressDialog.setCancelable(true);
+        progressDialog.show();
+        randomKey = UUID.randomUUID().toString();
+        //StorageReference store = storageReference.child("Images/"+randomKey);
+        storageReference = firebaseStorage.getReference("Images/"+randomKey);
+
+        storageReference.putFile(selectedImageUri)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        ImagePath =taskSnapshot.getStorage().getDownloadUrl().toString();
+                        progressDialog.dismiss();
+                        Toast.makeText(createNote.this, "Image Uploaded", Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull  Exception e) {
+                progressDialog.dismiss();
+                Toast.makeText(createNote.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        })
+        .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+                double progresspercent = (100.00 * snapshot.getBytesTransferred() / snapshot.getTotalByteCount());
+                progressDialog.setMessage("Progress:"+(int) progresspercent + "%");
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(progresspercent>=100.00){
+                            try {
+
+                                    Thread.sleep(1000);
+                                }catch(InterruptedException e){
+
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }).start();
+
+            }
+        });
+
     }
 
 
