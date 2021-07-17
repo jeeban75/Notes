@@ -36,6 +36,7 @@
         <activity android:name=".LoginActivity"
             android:screenOrientation="portrait"></activity>
 
+        <activity android:name=".RegisterActivity"></activity>
 
         <activity android:name=".UpdateDeleteNote"
             android:screenOrientation="portrait"></activity>

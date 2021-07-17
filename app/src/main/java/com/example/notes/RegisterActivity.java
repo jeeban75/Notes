@@ -13,16 +13,23 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RegisterActivity extends AppCompatActivity {
 
     Button btnRegister;
     EditText edtUsername,edtEmail,edtPassword,edtConfirmPassword;
     private FirebaseAuth firebaseAuth;
+    FirebaseUser firebaseUser;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,6 +41,7 @@ public class RegisterActivity extends AppCompatActivity {
         edtConfirmPassword= (EditText) findViewById(R.id.inputConfirmPassword);
 
         firebaseAuth=FirebaseAuth.getInstance();
+        firebaseUser = firebaseAuth.getCurrentUser();
 
 
         TextView btn=findViewById(R.id.alreadyHaveAccount);
@@ -62,6 +70,7 @@ public class RegisterActivity extends AppCompatActivity {
                 else if (Password.equals(ConfirmPassword))
                 {
                     registerUser(Email,Password);
+
                 }
                 else
                 {
@@ -74,6 +83,7 @@ public class RegisterActivity extends AppCompatActivity {
 
 
     }
+
 
     private void registerUser(String Email, String Password) {
         firebaseAuth.createUserWithEmailAndPassword(Email,Password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
@@ -95,6 +105,10 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(RegisterActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+
+
+
+
 
     }
 

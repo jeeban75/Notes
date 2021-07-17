@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -193,11 +194,11 @@ public class MainActivity extends AppCompatActivity   {
                         view.findViewById(R.id.textDeleteNote).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                dialogDeleteNote.dismiss();
                                 DocumentReference documentReference = firebaseFirestore.collection("Notes").document(firebaseUser.getUid()).collection("Data").document(docId);
                                 documentReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void unused) {
-                                        dialogDeleteNote.dismiss();
                                         Toast.makeText(MainActivity.this, "Note Deleted", Toast.LENGTH_SHORT).show();
 
                                     }
