@@ -1,19 +1,31 @@
 package com.example.notes;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Picture;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,10 +33,12 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
@@ -43,11 +57,13 @@ import com.makeramen.roundedimageview.RoundedImageView;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Timer;
 import java.util.TimerTask;
 
 
 public class MainActivity extends AppCompatActivity   {
+
 
 
     ImageView imageAddNoteMain;
@@ -59,11 +75,10 @@ public class MainActivity extends AppCompatActivity   {
     StorageReference storageReference;
     private Timer timer;
     EditText inputSearch;
+    LinearLayout logOut;
 
     public static final int requestAddNote = 1;
-    private int noteClickedPosition = -1;
     private AlertDialog dialogDeleteNote;
-    String searchKeyword;
     FirestoreRecyclerAdapter<Note,NoteViewHolder> noteAdapter;
 
     @Override
@@ -77,7 +92,6 @@ public class MainActivity extends AppCompatActivity   {
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
         firebaseStorage = FirebaseStorage.getInstance();
-        storageReference = firebaseStorage.getReference() ;
 
         imageAddNoteMain = findViewById(R.id.imageAddNoteMain);
         imageAddNoteMain.setOnClickListener(new View.OnClickListener() {
@@ -88,14 +102,23 @@ public class MainActivity extends AppCompatActivity   {
                 );
             }
         });
+
+
+        logOut = findViewById(R.id.layoutLogOut);
+        logOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                firebaseAuth.signOut();
+                Toast.makeText(MainActivity.this, "Logged out", Toast.LENGTH_SHORT).show();
+                Intent intent =new Intent(MainActivity.this,LoginActivity.class);
+                startActivity(intent);
+            }
+        });
+
         showRecycleView();
-        //end of imagenoteitem
-
         inputSearch = findViewById(R.id.inputSearch);
-
-
-
     }
+
     private void showRecycleView() {
         Query query = firebaseFirestore.collection("Notes").document(firebaseUser.getUid()).collection("Data")
                 .orderBy("DateTime", Query.Direction.DESCENDING);
@@ -105,66 +128,12 @@ public class MainActivity extends AppCompatActivity   {
             @Override
             protected void onBindViewHolder(@NonNull  NoteViewHolder holder, int position, @NonNull  Note note) {
 
-                holder.Title.setText(note.getTitle());
-                holder.Subtitle.setText(note.getSubtitle());
-                holder.DateTime.setText(note.getDateTime());
-               // holder.setColor(note.getSelectedNoteColor(position));
-               GradientDrawable gradientDrawable = (GradientDrawable) holder.linearLayout.getBackground();
-                if(note.getSelectedNoteColor()!=null){
+                    holder.Title.setText(note.getTitle());
+                    holder.Subtitle.setText(note.getSubtitle());
+                    holder.DateTime.setText(note.getDateTime());
 
-                    gradientDrawable.setColor(Color.parseColor(note.getSelectedNoteColor()));
-                }
-                else{
-                   gradientDrawable.setColor(Color.parseColor("#333333"));
-                }
-              /*  if (note.getImagePath()!=null){
-                //Glide.with(holder.itemView.getContext()).load(note.getImagePath()).into(holder.roundedImageView);
-
-                    try {
-                        File localfile = File.createTempFile("tempfile",".jpg");
-                        storageReference.getFile(localfile)
-                                .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                                        holder.roundedImageView.setImageBitmap(BitmapFactory.decodeFile(localfile.getAbsolutePath()));
-                                        holder.roundedImageView.setVisibility(View.VISIBLE);
-                                    }
-                                }).addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull  Exception e) {
-                                Toast.makeText(MainActivity.this, "Failed To Retrieve Images", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-
-
-                }else{
-                    holder.roundedImageView.setVisibility(View.GONE);
-                }*/
-
-             /*  timer = new Timer();
-               timer.schedule(new TimerTask() {
-                   @Override
-                   public void run() {
-                       searchKeyword = holder.inputSearch.getText().toString();
-                       if(searchKeyword.trim().isEmpty()){
-                              timer.cancel();
-                       }else{
-
-                           if(note.getTitle().toLowerCase().contains(searchKeyword.toLowerCase())
-                           ||note.getSubtitle().toLowerCase().contains(searchKeyword.toLowerCase())
-                           ||note.gettext().toLowerCase().contains(searchKeyword.toLowerCase())){
-                               holder.Title.setText(note.getTitle());
-                               holder.Subtitle.setText(note.getSubtitle());
-
-                           }
-                       }
-                   }
-               },500);*/
-
+                    holder.recycleColor(note);
+                    holder.recycleImages(note);
 
                 String docId = noteAdapter.getSnapshots().getSnapshot(position).getId();
                 holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -182,48 +151,13 @@ public class MainActivity extends AppCompatActivity   {
                 holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
                     @Override
                     public boolean onLongClick(View v) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                        View view = LayoutInflater.from(getApplicationContext()).inflate(
-                                R.layout.layout_delete, (ViewGroup) findViewById(R.id.layoutDeleteContainerNote)
-                        );
-                        builder.setView(view);
-                        dialogDeleteNote = builder.create();
-                        if (dialogDeleteNote.getWindow() != null) {
-                            dialogDeleteNote.getWindow().setBackgroundDrawable(new ColorDrawable(0));
-                        }
-                        view.findViewById(R.id.textDeleteNote).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                dialogDeleteNote.dismiss();
-                                DocumentReference documentReference = firebaseFirestore.collection("Notes").document(firebaseUser.getUid()).collection("Data").document(docId);
-                                documentReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void unused) {
-                                        Toast.makeText(MainActivity.this, "Note Deleted", Toast.LENGTH_SHORT).show();
-
-                                    }
-                                }).addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull  Exception e) {
-                                        Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                                        dialogDeleteNote.dismiss();
-                                    }
-                                });
-
-                            }
-                        });
-
-                        view.findViewById(R.id.textCancelNote).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                dialogDeleteNote.dismiss();
-                            }
-                        });
-                        dialogDeleteNote.show();
+                        holder.longClick(note,docId);
                         return true;
                     }
                 });
             }
+
+
 
             @NonNull
             @Override
@@ -231,19 +165,14 @@ public class MainActivity extends AppCompatActivity   {
                 View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.container_note, parent, false);
                 return new NoteViewHolder(v);
             }
-
-
         };
-
-
 
         StaggeredGridLayoutManager staggeredGridLayoutManager =
                 new StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
         recyclerView.setAdapter(noteAdapter);
-
-
     }
+
 
     public class NoteViewHolder extends  RecyclerView.ViewHolder{
 
@@ -258,14 +187,106 @@ public class MainActivity extends AppCompatActivity   {
             DateTime = itemView.findViewById(R.id.textDateandTime);
             roundedImageView = itemView.findViewById(R.id.imageNoteShow);
             linearLayout = itemView.findViewById(R.id.layoutNote);
-
         }
 
-        void setColor(Note note)
+
+        private void recycleColor(Note note){
+            GradientDrawable gradientDrawable = (GradientDrawable) linearLayout.getBackground();
+            if(note.getSelectedNoteColor()!=null){
+
+                gradientDrawable.setColor(Color.parseColor(note.getSelectedNoteColor()));
+            }
+            else{
+                gradientDrawable.setColor(Color.parseColor("#333333"));
+            }
+        }
+
+
+        private void recycleImages(Note note)
         {
-            Note colourNote = new Note();
+
+            if (note.getImagePath()!=null){
+                storageReference = firebaseStorage.getReference().child("Images/"+note.getImagePath());
+                storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Glide.with(getApplicationContext()).load(uri)
+                                .into(roundedImageView);
+                        roundedImageView.setVisibility(View.VISIBLE);
+
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure( Exception e) {
+                        Toast.makeText(MainActivity.this, "Unable to retrieve Images   "+e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            }else{
+                roundedImageView.setVisibility(View.GONE);
+            }
+        }
+
+
+
+        private void longClick(Note note,String docId)
+        {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            View view = LayoutInflater.from(getApplicationContext()).inflate(
+                    R.layout.layout_delete, (ViewGroup) findViewById(R.id.layoutDeleteContainerNote)
+            );
+            builder.setView(view);
+            dialogDeleteNote = builder.create();
+            if (dialogDeleteNote.getWindow() != null) {
+                dialogDeleteNote.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+            }
+            view.findViewById(R.id.textDeleteNote).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialogDeleteNote.dismiss();
+                    DocumentReference documentReference = firebaseFirestore.collection("Notes").document(firebaseUser.getUid()).collection("Data").document(docId);
+                    documentReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void unused) {
+                            Toast.makeText(MainActivity.this, "Note Deleted", Toast.LENGTH_SHORT).show();
+
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull  Exception e) {
+                            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                            dialogDeleteNote.dismiss();
+                        }
+                    });
+                    if(note.getImagePath()!=null) {
+                        StorageReference storageDelete = firebaseStorage.getReference().child("Images/" + note.getImagePath());
+                        storageDelete.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void unused) {
+
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(MainActivity.this, "Image Deletion failed" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }
+
+            });
+
+
+            view.findViewById(R.id.textCancelNote).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialogDeleteNote.dismiss();
+                }
+            });
+            dialogDeleteNote.show();
 
         }
+
     }
 
 

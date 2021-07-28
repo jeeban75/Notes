@@ -31,9 +31,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.common.base.FinalizableWeakReference;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -69,6 +72,7 @@ public class createNote extends AppCompatActivity {
     StorageReference storageReference;
     private AlertDialog dialogAddURL;
     String randomKey ;
+    Boolean select = false;
     Uri selectedImageUri;
 
     @Override
@@ -83,7 +87,6 @@ public class createNote extends AppCompatActivity {
 
         firebaseFirestore = FirebaseFirestore.getInstance();
         firebaseStorage = FirebaseStorage.getInstance();
-      //  storageReference = firebaseStorage.getReference();
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
 
@@ -105,23 +108,20 @@ public class createNote extends AppCompatActivity {
         });
 
         SelectedNoteColor = "#333333";
-        ImagePath = "";
+
         Miscellaneous();
         SubtitleIndiciatorColor();
 
 
-
         imageSave = findViewById(R.id.imageSave);
-
        imageSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                    saveNote();
-
-
+                saveDetails();
             }
         });
+
+
 
         removeURl = findViewById(R.id.imageRemoveWebURl);
         removeURl.setOnClickListener(new View.OnClickListener() {
@@ -136,17 +136,16 @@ public class createNote extends AppCompatActivity {
         removeImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ImagePath = null;
                 imageNote.setImageBitmap(null);
                 imageNote.setVisibility(View.GONE);
                 removeImage.setVisibility(View.GONE);
+                select = false;
             }
         });
-
     }
 
-
-    //Validation
-    private void saveNote() {
+    private void saveDetails(){
         String getTitle = inputNoteTitle.getText().toString();
         String getSubtitle = inputNoteSubtitle.getText().toString().trim();
         String getText = inputNoteText.getText().toString().trim();
@@ -157,42 +156,57 @@ public class createNote extends AppCompatActivity {
             Toast.makeText(this, "Note Can't Be Empty", Toast.LENGTH_SHORT).show();
 
         }
-        else{
-        String Title = inputNoteTitle.getText().toString();
-        String Subtitle = inputNoteSubtitle.getText().toString();
-        String Text = inputNoteText.getText().toString();
-        String DateTime = textDateTime.getText().toString();
+        else {
+            if (select){
+                storeImage();
+            }
+            else {
+                ImagePath = null;
+                saveNote();
+            }
+        }
+    }
+    //Validation
+    private void saveNote() {
+
+            String Title = inputNoteTitle.getText().toString();
+            String Subtitle = inputNoteSubtitle.getText().toString();
+            String Text = inputNoteText.getText().toString();
+            String DateTime = textDateTime.getText().toString();
+
 
             DocumentReference documentReference = firebaseFirestore.collection("Notes").document(firebaseUser.getUid()).collection("Data").document();
             Map<String, Object> note = new HashMap<>();
-            note.put("Title", Title);
-            note.put("Subtitle", Subtitle);
-            note.put("Text", Text);
-            note.put("DateTime", DateTime);
-            note.put("SelectedNoteColor",SelectedNoteColor);
-            //storeImage();
 
-           note.put("ImagePath",ImagePath);
-            if (layoutWebURl.getVisibility() == View.VISIBLE) {
-                note.put("WebLink", textWebURl.getText().toString());
+                            note.put("Title", Title);
+                            note.put("Subtitle", Subtitle);
+                            note.put("Text", Text);
+                            note.put("DateTime", DateTime);
+                            note.put("SelectedNoteColor", SelectedNoteColor);
+                            if(select)
+                            {
+                                note.put("ImagePath",ImagePath);
+                            }
+                            if (layoutWebURl.getVisibility() == View.VISIBLE) {
+                                note.put("WebLink", textWebURl.getText().toString());
+                            }
+                            documentReference.set(note).addOnSuccessListener(new OnSuccessListener<Void>() {
+
+                                @Override
+                                public void onSuccess(Void unused) {
+
+                                    Toast.makeText(createNote.this, "Data Inserted", Toast.LENGTH_SHORT).show();
+                                    startActivity(new Intent(createNote.this, MainActivity.class));
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Toast.makeText(createNote.this, "Failed" + e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                                }
+                            });
             }
 
-            documentReference.set(note).addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void unused) {
-
-                    Toast.makeText(createNote.this, "Data Inserted", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(createNote.this, MainActivity.class));
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(createNote.this, "Failed" + e.getMessage(), Toast.LENGTH_SHORT).show();
-
-                }
-            });
-        }
-    }
 
     private void Miscellaneous() {
         final LinearLayout linearLayout = findViewById(R.id.layoutMiscellaneous);
@@ -341,8 +355,8 @@ public class createNote extends AppCompatActivity {
                         imageNote.setImageBitmap(bitmap);
                         imageNote.setVisibility(View.VISIBLE);
                         removeImage.setVisibility(View.VISIBLE);
-                        storeImage();
-                       // ImagePath = selectedImageUri.getPath();
+                        select = true;
+
 
                     } catch (Exception e) {
                         Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -352,23 +366,22 @@ public class createNote extends AppCompatActivity {
         }
     }
 
-    private void storeImage() {
 
+    private void storeImage()
+    {
         final ProgressDialog progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Uploading Image...");
         progressDialog.setCancelable(true);
         progressDialog.show();
         randomKey = UUID.randomUUID().toString();
-        //StorageReference store = storageReference.child("Images/"+randomKey);
-        storageReference = firebaseStorage.getReference("Images/"+randomKey);
-
+        ImagePath = randomKey;
+        storageReference = firebaseStorage.getReference("Images/"+ImagePath);
         storageReference.putFile(selectedImageUri)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        ImagePath =taskSnapshot.getStorage().getDownloadUrl().toString();
                         progressDialog.dismiss();
-                        Toast.makeText(createNote.this, "Image Uploaded", Toast.LENGTH_SHORT).show();
+                        saveNote();
                     }
                 }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -376,30 +389,27 @@ public class createNote extends AppCompatActivity {
                 progressDialog.dismiss();
                 Toast.makeText(createNote.this, e.getMessage(), Toast.LENGTH_SHORT).show();
             }
-        })
-        .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
-                double progresspercent = (100.00 * snapshot.getBytesTransferred() / snapshot.getTotalByteCount());
-                progressDialog.setMessage("Progress:"+(int) progresspercent + "%");
+                double progressPercent = (100.00 * snapshot.getBytesTransferred() / snapshot.getTotalByteCount());
+                progressDialog.setMessage("Progress:"+(int) progressPercent + "%");
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        if(progresspercent>=100.00){
+                        if(progressPercent>=100.00){
                             try {
 
-                                    Thread.sleep(1000);
-                                }catch(InterruptedException e){
+                                Thread.sleep(1000);
+                            }catch(InterruptedException e){
 
                                 e.printStackTrace();
                             }
                         }
                     }
                 }).start();
-
             }
         });
-
     }
 
 

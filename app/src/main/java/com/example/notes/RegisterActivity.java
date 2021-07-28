@@ -30,6 +30,7 @@ public class RegisterActivity extends AppCompatActivity {
     EditText edtUsername,edtEmail,edtPassword,edtConfirmPassword;
     private FirebaseAuth firebaseAuth;
     FirebaseUser firebaseUser;
+    FirebaseFirestore firebaseFirestore;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +43,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         firebaseAuth=FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
+        firebaseFirestore = FirebaseFirestore.getInstance();
 
 
         TextView btn=findViewById(R.id.alreadyHaveAccount);
@@ -69,7 +71,7 @@ public class RegisterActivity extends AppCompatActivity {
                 }
                 else if (Password.equals(ConfirmPassword))
                 {
-                    registerUser(Email,Password);
+                    registerUser(Username,Email,Password);
 
                 }
                 else
@@ -85,14 +87,27 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
 
-    private void registerUser(String Email, String Password) {
+    private void registerUser(String Username,String Email, String Password) {
         firebaseAuth.createUserWithEmailAndPassword(Email,Password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull  Task<AuthResult> task) {
                 if(task.isSuccessful()){
-
-                    Toast.makeText(RegisterActivity.this, "Registration Successful", Toast.LENGTH_SHORT).show();
-                    sendVerification();
+                    DocumentReference documentReference = firebaseFirestore.collection("UserDetails").document();
+                    Map<String, Object> note = new HashMap<>();
+                    note.put("Username",Username);
+                    note.put("Email",Email);
+                    documentReference.set(note).addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void unused) {
+                            Toast.makeText(RegisterActivity.this, "Registration Successful", Toast.LENGTH_SHORT).show();
+                            sendVerification();
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(RegisterActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
                 else
                 {
@@ -105,11 +120,6 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(RegisterActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-
-
-
-
-
     }
 
     private void sendVerification() {

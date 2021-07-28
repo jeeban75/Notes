@@ -1,6 +1,7 @@
 package com.example.notes;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -29,21 +30,26 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 public class UpdateDeleteNote extends AppCompatActivity {
 
@@ -51,9 +57,7 @@ public class UpdateDeleteNote extends AppCompatActivity {
     EditText inputNoteTitle, inputNoteSubtitle, inputNoteText;
     TextView textDateTime, textWebURl;
     private LinearLayout layoutWebURl;
-    private String ImagePath;
-    private String SelectedNoteColor;
-    private String docId;
+    private String ImagePath,SelectedNoteColor,docId,randomKey;
     private View SubtitleIndicator;
     private static final int REQUEST_CODE_STORAGE_PERMISSION = 1;
     private static final int REQUEST_CODE_SELECT_IMAGE = 2;
@@ -65,12 +69,17 @@ public class UpdateDeleteNote extends AppCompatActivity {
     private AlertDialog dialogAddURL;
     Intent Data;
     Note AvailableNote;
-   LinearLayout linearLayout;
+    LinearLayout linearLayout;
+    Uri selectedImageUri;
+    Boolean select = false;
+    Boolean deleteImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_note);
+
+        deleteImage = true;
 
         inputNoteTitle = (EditText) findViewById(R.id.inputNoteTitle);
         inputNoteSubtitle = (EditText) findViewById(R.id.inputNoteSubtitle);
@@ -79,7 +88,6 @@ public class UpdateDeleteNote extends AppCompatActivity {
 
         firebaseFirestore = FirebaseFirestore.getInstance();
         firebaseStorage = FirebaseStorage.getInstance();
-        storageReference = firebaseStorage.getReference();
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
 
@@ -102,23 +110,22 @@ public class UpdateDeleteNote extends AppCompatActivity {
         });
 
         SelectedNoteColor = "#333333";
-        ImagePath = "";
+        ImagePath = " ";
         Miscellaneous();
         SubtitleIndiciatorColor();
 
         Data = getIntent();
-        if (Data.getBooleanExtra("isViewOrUpdate",true)){
-
-
-            check();}
+        if (Data.getBooleanExtra("isViewOrUpdate",true))
+        {
+            check();
+        }
 
         imageSave = findViewById(R.id.imageSave);
-
         imageSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                 VieworUpdate();
+                 saveDetails();
 
             }
         });
@@ -139,17 +146,44 @@ public class UpdateDeleteNote extends AppCompatActivity {
                 imageNote.setImageBitmap(null);
                 imageNote.setVisibility(View.GONE);
                 removeImage.setVisibility(View.GONE);
+               select = false;
+                deleteImage = false;
+                deleteImage();
+
             }
         });
 
     }
 
+    private void saveDetails(){
+            if (select)
+            {
+                storeImage();
+            }
+            else {
+                VieworUpdate();
+            }
+    }
     private void check() {
 
         Intent intent = new Intent(getApplicationContext(), createNote.class);
         AvailableNote = (Note) getIntent().getSerializableExtra("documentSnapshot");
         intent.putExtra("DocId", getIntent().getStringExtra("DocId"));
         docId = Data.getStringExtra("DocId");
+
+        if(AvailableNote.getImagePath() != null){
+            storageReference = firebaseStorage.getReference().child("Images/"+AvailableNote.getImagePath());
+            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Glide.with(getApplicationContext()).load(uri)
+                            .into(imageNote);
+                    imageNote.setVisibility(View.VISIBLE);
+                    removeImage.setVisibility(View.VISIBLE);
+                }
+            });
+
+        }
 
         inputNoteTitle.setText(AvailableNote.getTitle());
         inputNoteSubtitle.setText(AvailableNote.getSubtitle());
@@ -158,7 +192,8 @@ public class UpdateDeleteNote extends AppCompatActivity {
                 new SimpleDateFormat("EEEE,dd MMMM yyyy HH:mm a", Locale.getDefault())
                         .format(new Date())
         );
-        //image left
+
+
         if (AvailableNote.getWebLink()!= null && !AvailableNote.getWebLink().trim().isEmpty()) {
             textWebURl.setText(AvailableNote.getWebLink());
             layoutWebURl.setVisibility(View.VISIBLE);
@@ -187,9 +222,6 @@ public class UpdateDeleteNote extends AppCompatActivity {
 
     }
         private void VieworUpdate() {
-            String getTitle = inputNoteTitle.getText().toString();
-            String getSubtitle = inputNoteSubtitle.getText().toString().trim();
-            String getText = inputNoteText.getText().toString().trim();
 
                 if (inputNoteTitle.getText().toString().isEmpty()) {
                     Toast.makeText(this, "Note Title Can't Be Empty", Toast.LENGTH_SHORT).show();
@@ -203,7 +235,6 @@ public class UpdateDeleteNote extends AppCompatActivity {
                     String Title = inputNoteTitle.getText().toString();
                     String Subtitle = inputNoteSubtitle.getText().toString();
                     String Text = inputNoteText.getText().toString();
-                    if (getTitle != Title || getSubtitle != Subtitle || getText != Text) {
 
                         String DateTime = textDateTime.getText().toString();
                         DocumentReference documentReference = firebaseFirestore.collection("Notes").document(firebaseUser.getUid()).collection("Data").document(docId);
@@ -213,6 +244,15 @@ public class UpdateDeleteNote extends AppCompatActivity {
                         note.put("Text", Text);
                         note.put("DateTime", DateTime);
                         note.put("SelectedNoteColor",SelectedNoteColor);
+
+                    if (AvailableNote.getImagePath()!= null && deleteImage)
+                    {
+                        note.put("ImagePath",AvailableNote.getImagePath());
+                    }
+                    if(select)
+                    {
+                        note.put("ImagePath",ImagePath);
+                    }
                         if (layoutWebURl.getVisibility() == View.VISIBLE) {
                             note.put("WebLink", textWebURl.getText().toString());
                         }
@@ -231,10 +271,71 @@ public class UpdateDeleteNote extends AppCompatActivity {
 
                             }
                         });
-                    }
                 }
         }
 
+
+    private void storeImage()
+    {
+        final ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Uploading Image...");
+        progressDialog.setCancelable(true);
+        progressDialog.show();
+        randomKey = UUID.randomUUID().toString();
+        ImagePath = randomKey;
+        storageReference = firebaseStorage.getReference("Images/"+ImagePath);
+        storageReference.putFile(selectedImageUri)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        progressDialog.dismiss();
+                        VieworUpdate();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull  Exception e) {
+                progressDialog.dismiss();
+                Toast.makeText(UpdateDeleteNote.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+                double progressPercent = (100.00 * snapshot.getBytesTransferred() / snapshot.getTotalByteCount());
+                progressDialog.setMessage("Progress:"+(int) progressPercent + "%");
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(progressPercent>=100.00){
+                            try {
+
+                                Thread.sleep(1000);
+                            }catch(InterruptedException e){
+
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }).start();
+            }
+        });
+    }
+
+    private void deleteImage()
+    {
+        StorageReference deleteImage = firebaseStorage.getReference().child("Images/"+AvailableNote.getImagePath());
+        deleteImage.delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        Toast.makeText(UpdateDeleteNote.this, "Image Deleted", Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull  Exception e) {
+                Toast.makeText(UpdateDeleteNote.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     private void Miscellaneous() {
 
@@ -378,7 +479,7 @@ public class UpdateDeleteNote extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_SELECT_IMAGE && resultCode == RESULT_OK) {
             if (data != null) {
-                Uri selectedImageUri = data.getData();
+                 selectedImageUri = data.getData();
                 if (selectedImageUri != null) {
                     try {
                         InputStream inputStream = getContentResolver().openInputStream(selectedImageUri);
@@ -386,6 +487,7 @@ public class UpdateDeleteNote extends AppCompatActivity {
                         imageNote.setImageBitmap(bitmap);
                         imageNote.setVisibility(View.VISIBLE);
                         removeImage.setVisibility(View.VISIBLE);
+                        select=true;
 
                     } catch (Exception e) {
                         Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -394,6 +496,7 @@ public class UpdateDeleteNote extends AppCompatActivity {
             }
         }
     }
+
 
 
     private  void  URlDialog(){
